@@ -3,7 +3,10 @@ http = require 'http'
 
 class PublishMessage
   constructor: (options={}) ->
-    {@cache,@datastore,pepper,uuidAliasResolver} = options
+    {
+      @firehoseClient
+      @uuidAliasResolver
+    } = options
 
   _doCallback: (request, code, callback) =>
     response =
@@ -16,12 +19,15 @@ class PublishMessage
   do: (request, callback) =>
     {toUuid, messageType} = request.metadata
 
-    message = request.rawData
-    @_send {toUuid, messageType, message}, (error) =>
+    @uuidAliasResolver.resolve toUuid, (error, toUuid) =>
       return callback error if error?
-      return @_doCallback request, 204, callback
+
+      message = request.rawData
+      @_send {toUuid, messageType, message}, (error) =>
+        return callback error if error?
+        return @_doCallback request, 204, callback
 
   _send: ({toUuid,messageType,message}, callback=->) =>
-    @cache.publish "#{messageType}:#{toUuid}", message, callback
+    @firehoseClient.publish "#{messageType}:#{toUuid}", message, callback
 
 module.exports = PublishMessage

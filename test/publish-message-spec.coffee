@@ -6,13 +6,10 @@ MessageWebhook = require '../src/publish-message'
 describe 'MessageWebhook', ->
   beforeEach ->
     @redisKey = uuid.v1()
-    @pepper = 'im-a-pepper'
     @uuidAliasResolver = resolve: (uuid, callback) => callback(null, uuid)
     options = {
-      cache: redis.createClient(@redisKey)
-      pepper: 'totally-a-secret'
+      firehoseClient: redis.createClient(@redisKey)
       @uuidAliasResolver
-      @pepper
     }
 
     dependencies = {@request}
